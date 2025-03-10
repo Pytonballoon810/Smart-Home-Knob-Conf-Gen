@@ -1,0 +1,167 @@
+.config-item {
+  display: flex;
+  flex-wrap: wrap; /* Allow wrapping on small screens */
+  gap: 10px;
+  margin-bottom: 1rem;
+  align-items: center;
+  width: 100%;
+}
+
+.name-input {
+  flex: 1;
+  padding: 0.75rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  min-width: 120px; /* Minimum width for input */
+}
+
+.name-input::placeholder {
+  font-size: 0.9rem;
+}
+
+.select-dropdown {
+  flex: 1.5;
+  padding: 0.75rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  min-width: 150px; /* Minimum width for dropdown */
+}
+
+.entity-id-input {
+  flex: 1;
+  padding: 0.75rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  min-width: 120px; /* Minimum width for input */
+}
+
+.entity-id-input::placeholder {
+  font-size: 0.9rem;
+}
+
+.delete-button {
+  padding: 0.75rem 1rem;
+  background-color: #f44336;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.delete-button:hover {
+  background-color: #d32f2f;
+}
+
+.config-item-wrapper {
+  margin-bottom: 1.5rem;
+  width: 100%;
+  overflow-x: auto; /* Allow horizontal scrolling when needed */
+}
+
+.additional-params {
+  display: flex;
+  flex-wrap: wrap; /* Allow wrapping on small screens */
+  gap: 20px;
+  margin-top: 10px;
+  margin-left: 20px;
+  padding-left: 10px;
+  border-left: 2px solid #e0e0e0;
+  width: calc(100% - 32px);
+}
+
+.param-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 200px; /* Ensure parameter containers maintain usability */
+}
+
+.param-container label {
+  font-size: 0.9rem;
+  min-width: 80px;
+}
+
+.param-input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 100px;
+  min-width: 60px;
+}
+
+.name-input.invalid,
+.entity-id-input.invalid,
+.select-dropdown.invalid,
+.param-input.invalid {
+  border: 2px solid #ff8c00; /* Orange border */
+  box-shadow: 0 0 5px rgba(255, 140, 0, 0.5); /* Subtle orange glow */
+}
+
+.name-input.invalid::placeholder,
+.entity-id-input.invalid::placeholder {
+  color: #ff8c00;
+}
+
+/* Add a subtle animation to draw attention */
+@keyframes pulse-border {
+  0% { border-color: #ff8c00; }
+  50% { border-color: #ff6b00; }
+  100% { border-color: #ff8c00; }
+}
+
+.name-input.invalid:focus,
+.entity-id-input.invalid:focus,
+.select-dropdown.invalid:focus,
+.param-input.invalid:focus {
+  animation: pulse-border 1.5s infinite;
+  outline: none;
+}
+
+.color-picker {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background: none;
+}
+
+.color-picker::-webkit-color-swatch-wrapper {
+  padding: 0;
+  border: none;
+}
+
+.color-picker::-webkit-color-swatch {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.info-message {
+  color: #2196F3;
+  font-style: italic;
+  font-size: 0.9rem;
+  word-wrap: break-word; /* Allow text to wrap */
+}
+
+/* Warning messages should be fully visible */
+.detent-warning, .param-warning {
+  overflow-wrap: break-word;
+}
+
+/* Add responsive styles */
+@media (max-width: 768px) {
+  .additional-params {
+    margin-left: 10px;
+    padding-left: 5px;
+    flex-direction: column;
+  }
+  
+  .param-container {
+    margin-bottom: 10px;
+  }
+}

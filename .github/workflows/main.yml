@@ -1,0 +1,105 @@
+name: "Build and Release"
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  release:
+    types: [created]
+
+jobs:
+  build-tauri:
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [macos-latest, ubuntu-20.04, windows-latest]
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-20.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: './rusty-smart-knob-conf-gen/package-lock.json'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Rust dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-20.04'
+        run: |
+          rustup target add x86_64-unknown-linux-gnu
+
+      - name: Install dependencies and build (frontend)
+        run: |
+          cd rusty-smart-knob-conf-gen
+          npm install
+          npm run build
+
+      - name: Build the app (macOS)
+        if: matrix.platform == 'macos-latest'
+        run: |
+          cd rusty-smart-knob-conf-gen
+          npm run tauri build
+
+      - name: Build the app (Ubuntu)
+        if: matrix.platform == 'ubuntu-20.04'
+        run: |
+          cd rusty-smart-knob-conf-gen
+          npm run tauri build
+
+      - name: Build the app (Windows)
+        if: matrix.platform == 'windows-latest'
+        run: |
+          cd rusty-smart-knob-conf-gen
+          npm run tauri build
+
+      # Upload artifacts for all platforms
+      - name: Upload Windows artifacts
+        if: matrix.platform == 'windows-latest'
+        uses: actions/upload-artifact@v3
+        with:
+          name: windows-app
+          path: rusty-smart-knob-conf-gen/src-tauri/target/release/bundle/msi/*.msi
+
+      - name: Upload macOS artifacts
+        if: matrix.platform == 'macos-latest'
+        uses: actions/upload-artifact@v3
+        with:
+          name: macos-app
+          path: |
+            rusty-smart-knob-conf-gen/src-tauri/target/release/bundle/dmg/*.dmg
+            rusty-smart-knob-conf-gen/src-tauri/target/release/bundle/macos/*.app
+
+      - name: Upload Linux artifacts
+        if: matrix.platform == 'ubuntu-20.04'
+        uses: actions/upload-artifact@v3
+        with:
+          name: linux-app
+          path: |
+            rusty-smart-knob-conf-gen/src-tauri/target/release/bundle/deb/*.deb
+            rusty-smart-knob-conf-gen/src-tauri/target/release/bundle/appimage/*.AppImage
+
+      # If this is a release, upload the artifacts to the release
+      - name: Upload release artifacts
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            rusty-smart-knob-conf-gen/src-tauri/target/release/bundle/msi/*.msi
+            rusty-smart-knob-conf-gen/src-tauri/target/release/bundle/dmg/*.dmg
+            rusty-smart-knob-conf-gen/src-tauri/target/release/bundle/deb/*.deb
+            rusty-smart-knob-conf-gen/src-tauri/target/release/bundle/appimage/*.AppImage
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
