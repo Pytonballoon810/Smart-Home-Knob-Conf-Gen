@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import "./App.css";
-import ConfigItem, { 
-  interfaceTypes, 
-  detentOptions, 
+import ConfigItem, {
   requiresMinMax, 
   canHaveStep 
 } from "./components/ConfigItem";
