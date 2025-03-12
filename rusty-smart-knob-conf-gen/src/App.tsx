@@ -1,21 +1,10 @@
 import { useState, useEffect } from "react";
 import "./App.css";
-import ConfigItem, {
-  requiresMinMax, 
-  canHaveStep 
-} from "./components/ConfigItem";
+import ConfigItem from "./components/ConfigItem";
 
 function App() {
-  // Constants for width_radians calculations
-  const WIDTH_RADIANS = {
-    "Unbound": 10 * Math.PI / 180,
-    "Bounded / Course Values": 8.225806452 * Math.PI / 180,
-    "Multi Rev": 10 * Math.PI / 180,
-    "On/Off": 60 * Math.PI / 180,
-    "Return to Center": 60 * Math.PI / 180,
-    "Magnetic Detents": 7 * Math.PI / 180,
-    "Fine Values": 1 * Math.PI / 180
-  };
+  // Use a standard width_radians value (10 degrees in radians)
+  const DEFAULT_WIDTH_RADIANS = 10 * Math.PI / 180;
 
   // Constants for detent strength
   const DETENT_STRENGTH = {
@@ -26,10 +15,27 @@ function App() {
 
   // Default RGB color for led_hue (blue = 200)
   const DEFAULT_COLOR = "#0088ff"; // This approximately corresponds to hue 200
+  
+  // Default snap point
+  const DEFAULT_SNAP_POINT = 0.55;
 
-  // Expanded config item structure with color for led_hue
+  // Default custom detent strength
+  const DEFAULT_CUSTOM_DETENT_STRENGTH = "0.5";
+
+  // Simplified config item structure with customDetentStrength
   const [configItems, setConfigItems] = useState([
-    { id: 1, name: "", entityId: "", interfaceType: "", detentOption: "", min: "0", max: "-1", step: "", color: DEFAULT_COLOR }
+    { 
+      id: 1, 
+      name: "", 
+      entityId: "", 
+      detentOption: "", 
+      min: "0", 
+      max: "-1", 
+      step: "", 
+      color: DEFAULT_COLOR, 
+      snapPoint: "",
+      customDetentStrength: DEFAULT_CUSTOM_DETENT_STRENGTH
+    }
   ]);
 
   // State for notification
@@ -56,7 +62,18 @@ function App() {
   const addConfigItem = () => {
     setConfigItems([
       ...configItems, 
-      { id: getNextId(), name: "", entityId: "", interfaceType: "", detentOption: "", min: "0", max: "-1", step: "", color: DEFAULT_COLOR }
+      { 
+        id: getNextId(), 
+        name: "", 
+        entityId: "", 
+        detentOption: "", 
+        min: "0", 
+        max: "-1", 
+        step: "", 
+        color: DEFAULT_COLOR, 
+        snapPoint: "",
+        customDetentStrength: DEFAULT_CUSTOM_DETENT_STRENGTH
+      }
     ]);
   };
 
@@ -68,6 +85,15 @@ function App() {
     // Limit name to 16 characters
     if (field === "name" && value.length > 16) {
       value = value.slice(0, 16);
+    }
+    
+    // For customDetentStrength, ensure it's a valid number with one decimal place
+    if (field === "customDetentStrength" && value !== "") {
+      const numValue = parseFloat(value);
+      if (!isNaN(numValue)) {
+        // Round to 1 decimal place
+        value = Math.min(9.9, Math.max(0, numValue)).toFixed(1);
+      }
     }
     
     setConfigItems(
@@ -89,24 +115,20 @@ function App() {
       return item.entityId.length > 0;
     }
     
-    // Interface type validation
-    if (field === "interfaceType") {
-      return item.interfaceType !== "";
-    }
-    
     // Detent option validation
     if (field === "detentOption") {
       return item.detentOption !== "";
     }
     
-    // Min/max validation for specific interface types
-    if ((field === "min" || field === "max") && requiresMinMax.includes(item.interfaceType)) {
-      return item[field] !== "";
+    // Custom detent strength validation
+    if (field === "customDetentStrength" && item.detentOption === "Custom") {
+      const value = parseFloat(item.customDetentStrength);
+      return !isNaN(value) && value >= 0 && value <= 9.9;
     }
     
-    // Step is optional, so always valid
-    if (field === "step") {
-      return true;
+    // Min/max validation - always required now
+    if (field === "min" || field === "max") {
+      return item[field] !== "";
     }
     
     return true;
@@ -116,7 +138,7 @@ function App() {
   const checkAllItemsValid = () => {
     return configItems.every(item => {
       // Basic fields validation
-      if (!item.name || !item.entityId || !item.interfaceType || !item.detentOption) {
+      if (!item.name || !item.entityId || !item.detentOption) {
         return false;
       }
       
@@ -125,11 +147,17 @@ function App() {
         return false;
       }
       
-      // Check min/max values for types that require them
-      if (requiresMinMax.includes(item.interfaceType)) {
-        if (item.min === "" || item.max === "") {
+      // Custom detent strength validation
+      if (item.detentOption === "Custom") {
+        const value = parseFloat(item.customDetentStrength);
+        if (isNaN(value) || value < 0 || value > 9.9) {
           return false;
         }
+      }
+      
+      // Check min/max values - always required
+      if (item.min === "" || item.max === "") {
+        return false;
       }
       
       // All validations passed
@@ -174,29 +202,32 @@ function App() {
     return Math.round(h);
   };
 
-  // Format config items according to the specified JSON structure
+  // Format config items with simplified structure
   const formatConfigItems = () => {
     return configItems.map(item => {
       let minPosition = item.min !== "" ? item.min : "0";
       let maxPosition = item.max !== "" ? item.max : "-1";
       
-      // Override min and max for On/Off type
-      if (item.interfaceType === "On/Off") {
-        minPosition = "0";
-        maxPosition = "1";
+      // Use default width_radians
+      let widthRadians = DEFAULT_WIDTH_RADIANS;
+      
+      // Determine detent strength based on selected option
+      let detentStrength;
+      if (item.detentOption === "Custom") {
+        detentStrength = parseFloat(item.customDetentStrength);
+      } else {
+        detentStrength = DETENT_STRENGTH[item.detentOption as keyof typeof DETENT_STRENGTH] || 0;
       }
       
-      let widthRadians = WIDTH_RADIANS[item.interfaceType as keyof typeof WIDTH_RADIANS] || WIDTH_RADIANS["Unbound"];
-      
-      // Adjust width_radians for Fine Values by multiplying with 255/max
-      if (item.interfaceType === "Fine Values" && maxPosition !== "-1") {
-        const maxVal = parseInt(maxPosition);
-        if (!isNaN(maxVal) && maxVal > 0) {
-          widthRadians = widthRadians * (255 / maxVal);
-        }
+      // Determine snap_point based on user override or default
+      let snapPoint;
+      if (item.snapPoint && !isNaN(parseFloat(item.snapPoint))) {
+        // Use user-defined value
+        snapPoint = parseFloat(item.snapPoint);
+      } else {
+        // Use default
+        snapPoint = DEFAULT_SNAP_POINT;
       }
-      
-      const detentStrength = DETENT_STRENGTH[item.detentOption as keyof typeof DETENT_STRENGTH] || 0;
       
       return {
         position: 0,
@@ -205,8 +236,8 @@ function App() {
         width_radians: widthRadians,
         detent_strength: detentStrength,
         endstop_strength: 1,
-        snap_point: 0.55,
-        text: `${item.name}\n${item.detentOption}`,
+        snap_point: snapPoint,
+        text: `${item.name}\n${item.detentOption === "Custom" ? `Custom (${item.customDetentStrength})` : item.detentOption}`,
         led_hue: hexToHue(item.color),
         entity_id: item.entityId
       };
@@ -227,9 +258,10 @@ function App() {
 
   const copyConfigToClipboard = () => {
     const formattedConfig = formatConfigItems();
-    const configText = JSON.stringify(formattedConfig, null, 2);
-    navigator.clipboard.writeText(configText).then(() => {
-      setNotification({ visible: true, message: "Configuration copied to clipboard!" });
+    // Use compact JSON without indentation for clipboard copy
+    const compactConfigText = JSON.stringify(formattedConfig);
+    navigator.clipboard.writeText(compactConfigText).then(() => {
+      setNotification({ visible: true, message: "Compact configuration copied to clipboard!" });
     }).catch(err => {
       console.error("Failed to copy config: ", err);
       setNotification({ visible: true, message: "Failed to copy configuration!" });
@@ -245,15 +277,11 @@ function App() {
     setConfigItems(result);
   };
 
-  // Note: This function is no longer needed since we implemented custom drag handling
-  // but we're keeping the reorderItems function for use within our custom implementation
-
   return (
     <main className="container">
       <h1>Smart Knob Config Creator</h1>
       
       <div className="config-items">
-        {/* Use a drag and drop library like react-beautiful-dnd */}
         <div className="drag-container">
           {configItems.map((item, index) => (
             <div key={item.id} className="draggable-item">
@@ -335,7 +363,7 @@ function App() {
                       
                       // Remove clone and show original
                       document.body.removeChild(clone);
-                    // @ts-ignore
+                      // @ts-ignore
                       dragElement.style.visibility = 'visible';
                       placeholder.parentNode?.removeChild(placeholder);
                       
@@ -372,12 +400,12 @@ function App() {
             <ul>
               {configItems.map(item => (
                 <li key={item.id}>
-                  <strong>{item.name || "Unnamed"}</strong>: {item.interfaceType || "No interface selected"}, 
-                  {item.detentOption || "No detent option selected"}
-                  {requiresMinMax.includes(item.interfaceType) && (
-                    <span>, Min: {item.min || "not set"}, Max: {item.max || "not set"}</span>
-                  )}
-                  {canHaveStep.includes(item.interfaceType) && item.step && (
+                  <strong>{item.name || "Unnamed"}</strong>: 
+                  {item.detentOption === "Custom" ? 
+                    `Custom Detent (${item.customDetentStrength})` : 
+                    (item.detentOption || "No detent option selected")}
+                  <span>, Min: {item.min || "not set"}, Max: {item.max || "not set"}</span>
+                  {item.step && (
                     <span>, Step: {item.step}</span>
                   )}
                   <span>, Entity ID: {item.entityId || "not set"}</span>

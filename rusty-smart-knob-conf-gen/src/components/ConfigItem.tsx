@@ -1,42 +1,8 @@
 import React from 'react';
 import './ConfigItem.css';
 
-// Define the interface types and options as constants for reuse
-export const interfaceTypes = [
-  "Unbound",
-  "Bounded / Course Values",
-  "Multi Rev",
-  "On/Off",
-  "Return to Center",
-  "Magnetic Detents",
-  "Fine Values"
-];
-
-export const detentOptions = ["No Detents", "Weak Detents", "Strong Detents"];
-
-// Types that require min/max values
-export const requiresMinMax = [
-  "Bounded / Course Values", 
-  "Multi Rev", 
-  "Fine Values",
-  "Magnetic Detents"
-];
-
-// Types that require min/max values and are editable
-export const requiresMinMaxEditable = [
-  "Bounded / Course Values", 
-  "Multi Rev", 
-  "Fine Values",
-  "Magnetic Detents"
-];
-
-// Types that require min/max values but are not user-editable
-export const requiresMinMaxFixed = [
-  "On/Off"
-];
-
-// Types that can have step size
-export const canHaveStep = ["Magnetic Detents"];
+// Define the detent options with Custom option
+export const detentOptions = ["No Detents", "Weak Detents", "Strong Detents", "Custom"];
 
 // Interface for ConfigItem props
 export interface ConfigItemProps {
@@ -44,17 +10,18 @@ export interface ConfigItemProps {
     id: number;
     name: string;
     entityId: string;
-    interfaceType: string;
     detentOption: string;
     min: string;
     max: string;
     step: string;
     color: string;
+    snapPoint: string;
+    customDetentStrength: string; // Add custom detent strength field
   };
   onUpdate: (id: number, field: string, value: any) => void;
   onDelete: (id: number) => void;
   isFieldValid: (item: any, field: string) => boolean;
-  dragHandleProps?: any; // Add drag handle props
+  dragHandleProps?: any;
 }
 
 const ConfigItem: React.FC<ConfigItemProps> = ({ item, onUpdate, onDelete, isFieldValid, dragHandleProps }) => {
@@ -83,19 +50,6 @@ const ConfigItem: React.FC<ConfigItemProps> = ({ item, onUpdate, onDelete, isFie
           className={`entity-id-input ${!isFieldValid(item, "entityId") ? 'invalid' : ''}`}
         />
         
-        <select 
-          value={item.interfaceType} 
-          onChange={(e) => onUpdate(item.id, "interfaceType", e.target.value)}
-          className={`select-dropdown ${!item.interfaceType ? 'placeholder' : ''} ${!isFieldValid(item, "interfaceType") ? 'invalid' : ''}`}
-        >
-          <option value="" disabled>Interface Type</option>
-          {interfaceTypes.map((type) => (
-            <option key={type} value={type}>
-              {type}
-            </option>
-          ))}
-        </select>
-        
         <select
           value={item.detentOption}
           onChange={(e) => onUpdate(item.id, "detentOption", e.target.value)}
@@ -118,6 +72,29 @@ const ConfigItem: React.FC<ConfigItemProps> = ({ item, onUpdate, onDelete, isFie
         </button>
       </div>
       
+      {/* Display input for custom detent strength when Custom is selected */}
+      {item.detentOption === "Custom" && (
+        <div className="additional-params">
+          <div className="param-container">
+            <label>Detent Strength:</label>
+            <input
+              type="number"
+              value={item.customDetentStrength}
+              onChange={(e) => onUpdate(item.id, "customDetentStrength", e.target.value)}
+              placeholder="0.0-9.9"
+              className={`param-input ${!isFieldValid(item, "customDetentStrength") ? 'invalid' : ''}`}
+              step="0.1"
+              min="0"
+              max="9.9"
+              required
+            />
+          </div>
+          <div className="param-hint">
+            Enter a value between 0.0 (no detents) and 9.9 (very strong)
+          </div>
+        </div>
+      )}
+      
       {/* Display warning for Strong Detents */}
       {item.detentOption === "Strong Detents" && (
         <div className="detent-warning">
@@ -137,66 +114,74 @@ const ConfigItem: React.FC<ConfigItemProps> = ({ item, onUpdate, onDelete, isFie
         </div>
       </div>
       
-      {/* Show min/max inputs for specific interface types that need user input */}
-      {item.interfaceType && requiresMinMaxEditable.includes(item.interfaceType) && (
-        <div className="additional-params">
-          <div className="param-container">
-            <label>Min Value:</label>
-            <input
-              type="number"
-              value={item.min}
-              onChange={(e) => onUpdate(item.id, "min", e.target.value)}
-              placeholder="Min"
-              className={`param-input ${!isFieldValid(item, "min") ? 'invalid' : ''}`}
-              required
-            />
-          </div>
-          <div className="param-container">
-            <label>Max Value:</label>
-            <input
-              type="number"
-              value={item.max}
-              onChange={(e) => onUpdate(item.id, "max", e.target.value)}
-              placeholder="Max"
-              className={`param-input ${!isFieldValid(item, "max") ? 'invalid' : ''}`}
-              required
-            />
-          </div>
+      {/* Always show min/max inputs */}
+      <div className="additional-params">
+        <div className="param-container">
+          <label>Min Value:</label>
+          <input
+            type="number"
+            value={item.min}
+            onChange={(e) => onUpdate(item.id, "min", e.target.value)}
+            placeholder="Min"
+            className={`param-input ${!isFieldValid(item, "min") ? 'invalid' : ''}`}
+            required
+          />
         </div>
-      )}
+        <div className="param-container">
+          <label>Max Value:</label>
+          <input
+            type="number"
+            value={item.max}
+            onChange={(e) => onUpdate(item.id, "max", e.target.value)}
+            placeholder="Max"
+            className={`param-input ${!isFieldValid(item, "max") ? 'invalid' : ''}`}
+            required
+          />
+        </div>
+      </div>
       
       {/* Warning for default min/max values */}
-      {item.interfaceType && 
-       requiresMinMaxEditable.includes(item.interfaceType) && 
-       item.min === "0" && 
-       item.max === "-1" && (
+      {item.min === "0" && item.max === "-1" && (
         <div className="param-warning">
           ℹ️ Using default values (Min: 0, Max: -1) means there will be no end stops. Rotation will be unlimited.
         </div>
       )}
       
-      {/* Show info message for types with fixed min/max values */}
-      {item.interfaceType && requiresMinMaxFixed.includes(item.interfaceType) && (
-        <div className="additional-params">
-          <div className="param-container info-message">
-            <span>This type uses fixed values: Min = 0, Max = 1</span>
-          </div>
+      {/* Show step input for all items */}
+      <div className="additional-params">
+        <div className="param-container">
+          <label>Step Size (Optional):</label>
+          <input
+            type="number"
+            value={item.step}
+            onChange={(e) => onUpdate(item.id, "step", e.target.value)}
+            placeholder="Step"
+            className="param-input"
+          />
         </div>
-      )}
+      </div>
       
-      {/* Show step input for magnetic detents */}
-      {item.interfaceType && canHaveStep.includes(item.interfaceType) && (
-        <div className="additional-params">
-          <div className="param-container">
-            <label>Step Size (Optional):</label>
-            <input
-              type="number"
-              value={item.step}
-              onChange={(e) => onUpdate(item.id, "step", e.target.value)}
-              placeholder="Step"
-              className="param-input"
-            />
-          </div>
+      {/* Advanced section for snap point override */}
+      <div className="additional-params advanced-params">
+        <div className="param-container">
+          <label>Snap Point (Optional):</label>
+          <input
+            type="number"
+            value={item.snapPoint}
+            onChange={(e) => onUpdate(item.id, "snapPoint", e.target.value)}
+            placeholder="Auto"
+            className="param-input"
+            min="0"
+            max="1"
+            step="0.01"
+          />
+        </div>
+      </div>
+      
+      {/* Warning for snap point override */}
+      {item.snapPoint && (
+        <div className="advanced-warning">
+          ⚠️ Modifying the snap point is for advanced users only. Default value: 0.55
         </div>
       )}
     </div>
