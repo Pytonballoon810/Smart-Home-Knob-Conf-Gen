@@ -1,8 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './ConfigItem.css';
 
 // Define the detent options with Custom option
 export const detentOptions = ["No Detents", "Weak Detents", "Strong Detents", "Custom"];
+
+// Define the detent strength values (must match those in App.tsx)
+export const DETENT_STRENGTH = {
+  "No Detents": 0,
+  "Weak Detents": 1,
+  "Strong Detents": 2
+};
+
+// Interface for detent position entry
+export interface DetentPosition {
+  position: string;
+  strength: string;
+}
 
 // Interface for ConfigItem props
 export interface ConfigItemProps {
@@ -13,10 +26,11 @@ export interface ConfigItemProps {
     detentOption: string;
     min: string;
     max: string;
-    step: string;
     color: string;
-    snapPoint: string;
-    customDetentStrength: string; // Add custom detent strength field
+    customDetentStrength: string;
+    detentPositions: DetentPosition[];
+    emphasizeExtremeValues: boolean;
+    step: string; // Add the missing step property
   };
   onUpdate: (id: number, field: string, value: any) => void;
   onDelete: (id: number) => void;
@@ -25,6 +39,94 @@ export interface ConfigItemProps {
 }
 
 const ConfigItem: React.FC<ConfigItemProps> = ({ item, onUpdate, onDelete, isFieldValid, dragHandleProps }) => {
+  // Get the numerical value for the selected detent option
+  const getDetentStrengthValue = (option: string): string => {
+    if (!option || option === "Custom") return "";
+    return DETENT_STRENGTH[option as keyof typeof DETENT_STRENGTH].toString();
+  };
+
+  // Function to handle changes to a detent position entry
+  const handleDetentPositionChange = (index: number, field: 'position' | 'strength', value: string) => {
+    const updatedPositions = [...item.detentPositions];
+    updatedPositions[index] = { ...updatedPositions[index], [field]: value };
+    onUpdate(item.id, "detentPositions", updatedPositions);
+  };
+
+  // Function to add a new detent position
+  const addDetentPosition = () => {
+    const updatedPositions = [...item.detentPositions, { position: "", strength: "0.5" }];
+    onUpdate(item.id, "detentPositions", updatedPositions);
+  };
+
+  // Function to remove a detent position
+  const removeDetentPosition = (index: number) => {
+    const updatedPositions = [...item.detentPositions];
+    updatedPositions.splice(index, 1);
+    onUpdate(item.id, "detentPositions", updatedPositions);
+  };
+
+  // Validate position value against min/max if applicable
+  const updateDetentPosition = (index: number, field: string, value: string) => {
+    const newDetentPositions = [...item.detentPositions];
+    newDetentPositions[index] = { 
+      ...newDetentPositions[index], 
+      [field]: value 
+    };
+    
+    if (field === "position" && value !== "") {
+      const position = parseInt(value);
+      const min = parseInt(item.min);
+      const max = parseInt(item.max);
+      
+      if (!isNaN(min) && !isNaN(max) && max !== -1) {
+        if (position < min) {
+          newDetentPositions[index].position = min.toString();
+        } else if (position > max) {
+          newDetentPositions[index].position = max.toString();
+        }
+      }
+    }
+    
+    onUpdate(item.id, "detentPositions", newDetentPositions);
+  };
+
+  // Check if detent position is valid
+  const isDetentPositionValid = (position: string) => {
+    if (position === "") return false;
+    
+    const positionValue = parseInt(position);
+    if (isNaN(positionValue)) return false;
+    
+    const min = parseInt(item.min);
+    const max = parseInt(item.max);
+    if (!isNaN(min) && !isNaN(max) && max !== -1) {
+      return positionValue >= min && positionValue <= max;
+    }
+    
+    return true;
+  };
+  
+  // Check if detent strength is valid
+  const isDetentStrengthValid = (strength: string) => {
+    if (strength === "") return false;
+    
+    const strengthValue = parseFloat(strength);
+    return !isNaN(strengthValue) && strengthValue >= 0 && strengthValue <= 9.9;
+  };
+
+  // Check if the Custom Detent Positions table has any invalid entries
+  const hasInvalidDetentPositions = () => {
+    if (!item.detentPositions || item.detentPositions.length === 0) return false;
+    
+    return item.detentPositions.some(pos => 
+      !isDetentPositionValid(pos.position) || !isDetentStrengthValid(pos.strength)
+    );
+  };
+
+  // Conditional class for the Custom Detent Positions section
+  const detentSectionClass = 
+    `additional-params custom-detent-section ${hasInvalidDetentPositions() ? 'has-invalid-entries' : ''}`;
+
   return (
     <div className="config-item-wrapper">
       <div className="config-item">
@@ -95,6 +197,17 @@ const ConfigItem: React.FC<ConfigItemProps> = ({ item, onUpdate, onDelete, isFie
         </div>
       )}
       
+      {/* Display the numerical strength value for predefined detent options */}
+      {item.detentOption && item.detentOption !== "Custom" && (
+        <div className="additional-params">
+          <div className="param-info">
+            <span className="detent-value-info">
+              Detent Strength Value: <strong>{getDetentStrengthValue(item.detentOption)}</strong>
+            </span>
+          </div>
+        </div>
+      )}
+      
       {/* Display warning for Strong Detents */}
       {item.detentOption === "Strong Detents" && (
         <div className="detent-warning">
@@ -147,43 +260,99 @@ const ConfigItem: React.FC<ConfigItemProps> = ({ item, onUpdate, onDelete, isFie
         </div>
       )}
       
-      {/* Show step input for all items */}
-      <div className="additional-params">
-        <div className="param-container">
-          <label>Step Size (Optional):</label>
-          <input
-            type="number"
-            value={item.step}
-            onChange={(e) => onUpdate(item.id, "step", e.target.value)}
-            placeholder="Step"
-            className="param-input"
-          />
+      {/* Custom Detent Positions Table */}
+      <div className={detentSectionClass}>
+        <div className="custom-detent-header">
+          <h3>Custom Detent Positions</h3>
+          <div className="emphasize-option">
+            <input
+              type="checkbox"
+              id={`emphasize-extreme-values-${item.id}`}
+              checked={item.emphasizeExtremeValues}
+              onChange={(e) => onUpdate(item.id, "emphasizeExtremeValues", e.target.checked)}
+              className="emphasize-checkbox"
+            />
+            <label htmlFor={`emphasize-extreme-values-${item.id}`} className="emphasize-label">
+              Emphasize extreme values
+            </label>
+          </div>
+        </div>
+        
+        {item.emphasizeExtremeValues && (
+          <div className="emphasize-info">
+            This will double the detent strength at min and max positions
+          </div>
+        )}
+        
+        {hasInvalidDetentPositions() && (
+          <div className="validation-error">
+            ⚠️ Some detent positions have invalid values. Please correct them before continuing.
+          </div>
+        )}
+        
+        <table className="detent-positions-table">
+          <thead>
+            <tr>
+              <th>Position</th>
+              <th>Detent Strength (0.0-9.9)</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {item.detentPositions.map((entry, index) => (
+              <tr key={index}>
+                <td>
+                  <input
+                    type="number"
+                    value={entry.position}
+                    onChange={(e) => updateDetentPosition(index, 'position', e.target.value)}
+                    className={`detent-position-input ${!isDetentPositionValid(entry.position) ? 'invalid' : ''}`}
+                    placeholder="Position"
+                    required
+                  />
+                </td>
+                <td>
+                  <input
+                    type="number"
+                    value={entry.strength}
+                    onChange={(e) => handleDetentPositionChange(index, 'strength', e.target.value)}
+                    className={`detent-strength-input ${!isDetentStrengthValid(entry.strength) ? 'invalid' : ''}`}
+                    placeholder="Strength"
+                    step="0.1"
+                    min="0"
+                    max="9.9"
+                    required
+                  />
+                </td>
+                <td>
+                  <button
+                    onClick={() => removeDetentPosition(index)}
+                    className="remove-position-button"
+                    aria-label="Remove position"
+                  >
+                    ✕
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <button 
+          onClick={addDetentPosition}
+          className="add-position-button"
+          aria-label="Add detent position"
+        >
+          Add Position
+        </button>
+        <div className="detent-positions-info">
+          Define custom positions where detents should occur and their individual strength values.
+          {item.max !== "-1" && (
+            <div>
+              <strong>Note:</strong> Positions must be between {item.min} and {item.max} when end stops are enabled.
+            </div>
+          )}
         </div>
       </div>
-      
-      {/* Advanced section for snap point override */}
-      <div className="additional-params advanced-params">
-        <div className="param-container">
-          <label>Snap Point (Optional):</label>
-          <input
-            type="number"
-            value={item.snapPoint}
-            onChange={(e) => onUpdate(item.id, "snapPoint", e.target.value)}
-            placeholder="Auto"
-            className="param-input"
-            min="0"
-            max="1"
-            step="0.01"
-          />
-        </div>
-      </div>
-      
-      {/* Warning for snap point override */}
-      {item.snapPoint && (
-        <div className="advanced-warning">
-          ⚠️ Modifying the snap point is for advanced users only. Default value: 0.55
-        </div>
-      )}
     </div>
   );
 };

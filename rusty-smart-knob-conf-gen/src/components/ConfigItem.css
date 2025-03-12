@@ -96,7 +96,9 @@
 .name-input.invalid,
 .entity-id-input.invalid,
 .select-dropdown.invalid,
-.param-input.invalid {
+.param-input.invalid,
+.detent-position-input.invalid,
+.detent-strength-input.invalid {
   border: 2px solid #ff8c00; /* Orange border */
   box-shadow: 0 0 5px rgba(255, 140, 0, 0.5); /* Subtle orange glow */
 }
@@ -177,6 +179,197 @@
   font-style: italic;
 }
 
+.param-info {
+  display: flex;
+  align-items: center;
+  margin: 5px 0;
+}
+
+.detent-value-info {
+  font-size: 0.9rem;
+  color: #4a4a4a;
+  background-color: #f0f7ff;
+  padding: 4px 10px;
+  border-left: 3px solid #2196F3;
+  border-radius: 0 4px 4px 0;
+}
+
+/* Custom Detent Positions styles */
+.custom-detent-section {
+  flex-direction: column;
+  margin-top: 20px;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  padding: 15px 10px; /* Reduce horizontal padding */
+  border: 1px solid #e0e0e0;
+  width: calc(100% - 22px); /* Adjusted width calculation to fit properly */
+  overflow-x: hidden; /* Prevent horizontal scrolling within this section */
+  box-sizing: border-box; /* Include padding in width calculation */
+  max-width: 100%; /* Ensure it never exceeds container width */
+}
+
+.custom-detent-header {
+  display: flex;
+  flex-direction: column; /* Stack items vertically by default */
+  align-items: flex-start;
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+.custom-detent-header h3 {
+  margin: 0 0 10px 0;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.emphasize-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap; /* Allow wrapping if needed */
+  margin-bottom: 5px;
+}
+
+.emphasize-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  flex-shrink: 0; /* Prevent checkbox from shrinking */
+}
+
+.emphasize-label {
+  font-size: 0.9rem;
+  color: #555;
+  cursor: pointer;
+}
+
+.emphasize-info {
+  font-size: 0.85rem;
+  color: #0277bd;
+  margin-bottom: 12px;
+  padding: 5px 10px;
+  background-color: #e1f5fe;
+  border-radius: 4px;
+  border-left: 3px solid #03a9f4;
+}
+
+.detent-positions-table {
+  width: 100%; /* Make table take full width of container */
+  max-width: 100%; /* Ensure table doesn't exceed container width */
+  margin: 10px 0; /* Change from auto to 0 for left margin */
+  table-layout: fixed; /* Fixed table layout for better control */
+}
+
+.detent-positions-table th {
+  text-align: left;
+  padding: 8px 4px; /* Reduce horizontal padding in table cells */
+  font-size: 0.9rem;
+  font-weight: normal;
+  color: #666;
+  border-bottom: 1px solid #ddd;
+  word-wrap: break-word; /* Allow text wrapping in cells */
+}
+
+.detent-positions-table td {
+  padding: 8px 4px; /* Reduce horizontal padding in table cells */
+  border-bottom: 1px solid #eee;
+  word-wrap: break-word; /* Allow text wrapping in cells */
+}
+
+.detent-positions-table th:first-child,
+.detent-positions-table td:first-child {
+  width: 25%; /* Position column width */
+}
+
+.detent-positions-table th:nth-child(2),
+.detent-positions-table td:nth-child(2) {
+  width: 55%; /* Strength column width */
+}
+
+.detent-positions-table th:last-child,
+.detent-positions-table td:last-child {
+  width: 20%; /* Actions column width */
+  text-align: center; /* Center the content */
+}
+
+.detent-position-input,
+.detent-strength-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.remove-position-button {
+  background-color: #ff5252;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto; /* Center the button in its container */
+}
+
+.remove-position-button:hover {
+  background-color: #ff1744;
+}
+
+.add-position-button {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  align-self: flex-start;
+}
+
+.add-position-button:hover {
+  background-color: #43a047;
+}
+
+.detent-positions-info {
+  font-size: 0.85rem;
+  color: #777;
+  margin-top: 10px;
+  font-style: italic;
+}
+
+/* Custom detent positions table styling */
+.detent-positions-table {
+  width: 100%; /* Make table take full width of container */
+  max-width: 500px;
+  margin: 10px 0; /* Change from auto to 0 for left margin */
+}
+
+.detent-position-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+
+.detent-position-input {
+  width: 60px !important; /* Make the position input smaller and enforce size */
+  flex: 0 0 60px;
+}
+
+.detent-strength-input {
+  flex: 1;
+}
+
+.detent-position-controls {
+  display: flex;
+  gap: 5px;
+}
+
 /* Add responsive styles */
 @media (max-width: 768px) {
   .additional-params {
@@ -192,4 +385,61 @@
   .advanced-params {
     padding-left: 5px;
   }
+  
+  /* Responsive styles for the detent positions table */
+  .custom-detent-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .emphasize-option {
+    margin-top: 8px;
+    width: 100%;
+  }
+  
+  .detent-positions-table {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+  
+  .custom-detent-section {
+    width: calc(100% - 12px); /* Further reduce width on mobile */
+    padding: 10px 5px;
+    margin-left: 5px;
+    margin-right: 5px;
+  }
+  
+  .detent-positions-table th,
+  .detent-positions-table td {
+    padding: 6px 2px; /* Smaller padding on mobile */
+    font-size: 0.85rem; /* Smaller font size on mobile */
+  }
+  
+  .detent-position-input,
+  .detent-strength-input {
+    padding: 4px; /* Smaller input padding on mobile */
+    font-size: 0.85rem; /* Smaller font size for inputs */
+  }
+  
+  .remove-position-button {
+    width: 24px; /* Smaller button on mobile */
+    height: 24px;
+    font-size: 0.8rem;
+  }
+}
+
+.has-invalid-entries {
+  border: 1px dashed #ff8c00 !important;
+  background-color: #fff8f0 !important;
+}
+
+.validation-error {
+  color: #ff8c00;
+  font-size: 0.9rem;
+  margin: 5px 0 10px;
+  padding: 5px 10px;
+  background-color: #fff4e6;
+  border-left: 3px solid #ff8c00;
+  border-radius: 0 4px 4px 0;
 }

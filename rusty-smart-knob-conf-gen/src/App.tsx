@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import "./App.css";
-import ConfigItem from "./components/ConfigItem";
+import ConfigItem, { DetentPosition } from "./components/ConfigItem";
 
 function App() {
   // Use a standard width_radians value (10 degrees in radians)
@@ -15,14 +15,11 @@ function App() {
 
   // Default RGB color for led_hue (blue = 200)
   const DEFAULT_COLOR = "#0088ff"; // This approximately corresponds to hue 200
-  
-  // Default snap point
-  const DEFAULT_SNAP_POINT = 0.55;
 
   // Default custom detent strength
   const DEFAULT_CUSTOM_DETENT_STRENGTH = "0.5";
 
-  // Simplified config item structure with customDetentStrength
+  // Simplified config item structure with customDetentStrength and detent positions
   const [configItems, setConfigItems] = useState([
     { 
       id: 1, 
@@ -31,10 +28,11 @@ function App() {
       detentOption: "", 
       min: "0", 
       max: "-1", 
-      step: "", 
       color: DEFAULT_COLOR, 
-      snapPoint: "",
-      customDetentStrength: DEFAULT_CUSTOM_DETENT_STRENGTH
+      customDetentStrength: DEFAULT_CUSTOM_DETENT_STRENGTH,
+      detentPositions: [] as DetentPosition[],
+      emphasizeExtremeValues: false,
+      step: "" // Add the step property to match the interface
     }
   ]);
 
@@ -69,10 +67,11 @@ function App() {
         detentOption: "", 
         min: "0", 
         max: "-1", 
-        step: "", 
         color: DEFAULT_COLOR, 
-        snapPoint: "",
-        customDetentStrength: DEFAULT_CUSTOM_DETENT_STRENGTH
+        customDetentStrength: DEFAULT_CUSTOM_DETENT_STRENGTH,
+        detentPositions: [] as DetentPosition[],
+        emphasizeExtremeValues: false,
+        step: "" // Add the step property for new items as well
       }
     ]);
   };
@@ -131,6 +130,23 @@ function App() {
       return item[field] !== "";
     }
     
+    // Detent position validation
+    if (field === "detentPosition") {
+      const position = parseInt(item.position);
+      const min = parseInt(item.min);
+      const max = parseInt(item.max);
+      
+      // Check if it's a valid number
+      if (isNaN(position)) return false;
+      
+      // If we have defined min and max (no end stops), check if position is within range
+      if (!isNaN(min) && !isNaN(max) && max !== -1) {
+        return position >= min && position <= max;
+      }
+      
+      return true;
+    }
+    
     return true;
   };
 
@@ -152,6 +168,40 @@ function App() {
         const value = parseFloat(item.customDetentStrength);
         if (isNaN(value) || value < 0 || value > 9.9) {
           return false;
+        }
+        
+        // Validate all custom detent positions if any exist
+        if (item.detentPositions.length > 0) {
+          // Check if all positions have valid values
+          const allPositionsValid = item.detentPositions.every(pos => {
+            // Position must be a valid number
+            if (pos.position === "" || isNaN(parseInt(pos.position))) {
+              return false;
+            }
+            
+            // Check if position is within min/max range when end stops are enabled
+            const posValue = parseInt(pos.position);
+            const minValue = parseInt(item.min);
+            const maxValue = parseInt(item.max);
+            
+            if (!isNaN(minValue) && !isNaN(maxValue) && maxValue !== -1) {
+              if (posValue < minValue || posValue > maxValue) {
+                return false;
+              }
+            }
+            
+            // Strength must be a valid number between 0 and 9.9
+            const strengthValue = parseFloat(pos.strength);
+            if (isNaN(strengthValue) || strengthValue < 0 || strengthValue > 9.9) {
+              return false;
+            }
+            
+            return true;
+          });
+          
+          if (!allPositionsValid) {
+            return false;
+          }
         }
       }
       
@@ -202,45 +252,86 @@ function App() {
     return Math.round(h);
   };
 
-  // Format config items with simplified structure
+  // Format config items with detent_positions and snap_point_bias
   const formatConfigItems = () => {
     return configItems.map(item => {
-      let minPosition = item.min !== "" ? item.min : "0";
-      let maxPosition = item.max !== "" ? item.max : "-1";
+      const minPosition = item.min !== "" ? parseInt(item.min) : 0;
+      const maxPosition = item.max !== "" ? parseInt(item.max) : -1;
       
       // Use default width_radians
-      let widthRadians = DEFAULT_WIDTH_RADIANS;
+      const widthRadians = DEFAULT_WIDTH_RADIANS;
       
-      // Determine detent strength based on selected option
-      let detentStrength;
+      // Process detent positions based on the selected option
+      let detentPositions: number[] = [];
+      let snapPointBias: number[] = [];
+      
       if (item.detentOption === "Custom") {
-        detentStrength = parseFloat(item.customDetentStrength);
+        // If using custom detent option
+        const baseDetentStrength = parseFloat(item.customDetentStrength) || 0;
+        
+        // If custom positions are defined, use them
+        if (item.detentPositions.length > 0) {
+          detentPositions = item.detentPositions
+            .filter(pos => pos.position !== "")
+            .map(pos => parseInt(pos.position));
+          
+          snapPointBias = item.detentPositions
+            .filter(pos => pos.position !== "")
+            .map(pos => parseFloat(pos.strength) || 0);
+        } else {
+          // If "emphasize extreme values" is checked but no custom positions,
+          // Create detent positions at min, max, and middle
+          if (item.emphasizeExtremeValues && minPosition !== -1 && maxPosition !== -1) {
+            // Determine a middle position if min and max are defined
+            const middlePosition = Math.floor((minPosition + maxPosition) / 2);
+            
+            // Add min, middle, max positions
+            detentPositions = [minPosition, middlePosition, maxPosition];
+            snapPointBias = [
+              baseDetentStrength * 2, // Double strength at min
+              baseDetentStrength,     // Normal strength in the middle
+              baseDetentStrength * 2  // Double strength at max
+            ];
+          }
+        }
       } else {
-        detentStrength = DETENT_STRENGTH[item.detentOption as keyof typeof DETENT_STRENGTH] || 0;
+        // For predefined detent options
+        const detentStrength = DETENT_STRENGTH[item.detentOption as keyof typeof DETENT_STRENGTH] || 0;
+        
+        // For predefined options with "emphasize extreme values" checked
+        if (item.emphasizeExtremeValues && minPosition !== -1 && maxPosition !== -1) {
+          const middlePosition = Math.floor((minPosition + maxPosition) / 2);
+          detentPositions = [minPosition, middlePosition, maxPosition];
+          snapPointBias = [
+            detentStrength * 2,  // Double strength at min
+            detentStrength,      // Normal strength in the middle
+            detentStrength * 2   // Double strength at max
+          ];
+        }
       }
       
-      // Determine snap_point based on user override or default
-      let snapPoint;
-      if (item.snapPoint && !isNaN(parseFloat(item.snapPoint))) {
-        // Use user-defined value
-        snapPoint = parseFloat(item.snapPoint);
-      } else {
-        // Use default
-        snapPoint = DEFAULT_SNAP_POINT;
-      }
-      
-      return {
+      const baseConfig = {
         position: 0,
-        min_position: parseInt(minPosition),
-        max_position: parseInt(maxPosition),
+        min_position: minPosition,
+        max_position: maxPosition,
         width_radians: widthRadians,
-        detent_strength: detentStrength,
+        detent_strength: parseFloat(item.customDetentStrength) || DETENT_STRENGTH[item.detentOption as keyof typeof DETENT_STRENGTH] || 0,
         endstop_strength: 1,
-        snap_point: snapPoint,
         text: `${item.name}\n${item.detentOption === "Custom" ? `Custom (${item.customDetentStrength})` : item.detentOption}`,
         led_hue: hexToHue(item.color),
         entity_id: item.entityId
       };
+
+      // Add detent_positions and snap_point_bias if they exist
+      if (detentPositions.length > 0) {
+        return {
+          ...baseConfig,
+          detent_positions: detentPositions,
+          snap_point_bias: snapPointBias
+        };
+      }
+      
+      return baseConfig;
     });
   };
   
