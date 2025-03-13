@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [macos-latest, ubuntu-20.04, windows-latest]
+        platform: [macos-latest, ubuntu-24.04, windows-latest]
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -21,7 +21,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-20.04'
+        if: matrix.platform == 'ubuntu-24.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
@@ -39,7 +39,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Install Rust dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-20.04'
+        if: matrix.platform == 'ubuntu-24.04'
         run: |
           rustup target add x86_64-unknown-linux-gnu
 
@@ -56,7 +56,7 @@ jobs:
           npm run tauri build
 
       - name: Build the app (Ubuntu)
-        if: matrix.platform == 'ubuntu-20.04'
+        if: matrix.platform == 'ubuntu-24.04'
         run: |
           cd rusty-smart-knob-conf-gen
           npm run tauri build
@@ -85,7 +85,7 @@ jobs:
             rusty-smart-knob-conf-gen/src-tauri/target/release/bundle/macos/*.app
 
       - name: Upload Linux artifacts
-        if: matrix.platform == 'ubuntu-20.04'
+        if: matrix.platform == 'ubuntu-24.04'
         uses: actions/upload-artifact@v4
         with:
           name: linux-app
