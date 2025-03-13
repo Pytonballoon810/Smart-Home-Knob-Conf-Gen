@@ -49,6 +49,25 @@ h1 {
   border: 1px solid #ccc;
   border-radius: 4px;
   min-width: 150px; /* Ensure dropdown remains usable at small sizes */
+  -webkit-appearance: none; /* Remove default macOS styling */
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg fill='black' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+  padding-right: 30px; /* Make room for the custom arrow */
+}
+
+.select-dropdown::-ms-expand {
+  display: none; /* Remove default arrow in IE */
+}
+
+/* Add focus styling for the select dropdown */
+.select-dropdown:focus {
+  outline: none;
+  border-color: #2196F3;
+  box-shadow: 0 0 4px rgba(33, 150, 243, 0.5);
 }
 
 .entity-id-input {

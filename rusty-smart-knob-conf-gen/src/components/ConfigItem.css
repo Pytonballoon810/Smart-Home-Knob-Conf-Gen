@@ -27,6 +27,42 @@
   border: 1px solid #ccc;
   border-radius: 4px;
   min-width: 150px; /* Minimum width for dropdown */
+  -webkit-appearance: none; /* Remove default macOS styling */
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg fill='black' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+  padding-right: 30px; /* Make room for the custom arrow */
+}
+
+.select-dropdown::-ms-expand {
+  display: none; /* Remove default arrow in IE */
+}
+
+/* Add focus styling */
+.select-dropdown:focus {
+  outline: none;
+  border-color: #2196F3;
+  box-shadow: 0 0 4px rgba(33, 150, 243, 0.5);
+}
+
+/* Only apply placeholder styling to the displayed value, not the dropdown options */
+.select-dropdown.placeholder {
+  color: #757575;
+}
+
+/* Make dropdown options always normal color */
+.select-dropdown option {
+  color: #000000;
+}
+
+/* Style the disabled placeholder option differently */
+.select-dropdown option:disabled {
+  color: #999999;
+  background-color: #f2f2f2;
+  font-style: italic;
 }
 
 .entity-id-input {
@@ -442,4 +478,14 @@
   background-color: #fff4e6;
   border-left: 3px solid #ff8c00;
   border-radius: 0 4px 4px 0;
+}
+
+/* Styling for rotation input */
+.rotation-params .param-hint {
+  font-size: 0.8rem;
+  color: #666;
+  margin-left: 10px;
+  font-style: italic;
+  max-width: 300px;
+  line-height: 1.4;
 }

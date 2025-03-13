@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import './ConfigItem.css';
 
 // Define the detent options with Custom option
@@ -31,6 +31,7 @@ export interface ConfigItemProps {
     detentPositions: DetentPosition[];
     emphasizeExtremeValues: boolean;
     step: string; // Add the missing step property
+    rotation: string; // Added rotation field
   };
   onUpdate: (id: number, field: string, value: any) => void;
   onDelete: (id: number) => void;
@@ -250,6 +251,33 @@ const ConfigItem: React.FC<ConfigItemProps> = ({ item, onUpdate, onDelete, isFie
             className={`param-input ${!isFieldValid(item, "max") ? 'invalid' : ''}`}
             required
           />
+        </div>
+        <div className="param-container">
+          <label>Step:</label>
+          <input
+            type="number"
+            value={item.step}
+            onChange={(e) => onUpdate(item.id, "step", e.target.value)}
+            placeholder="Step"
+            className={`param-input ${!isFieldValid(item, "step") ? 'invalid' : ''}`}
+          />
+        </div>
+      </div>
+
+      {/* Add rotation amount input field */}
+      <div className="additional-params rotation-params">
+        <div className="param-container">
+          <label>Rotation:</label>
+          <input
+            type="text"
+            value={item.rotation}
+            onChange={(e) => onUpdate(item.id, "rotation", e.target.value)}
+            placeholder="Optional"
+            className={`param-input ${!isFieldValid(item, "rotation") ? 'invalid' : ''}`}
+          />
+        </div>
+        <div className="param-hint">
+          Controls rotation per step (2π/100 = input 1 for 100 steps). Leave empty for default (80% of full circle).
         </div>
       </div>
       
