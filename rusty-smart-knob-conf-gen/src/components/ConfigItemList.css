@@ -1,0 +1,7 @@
+.config-items {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+/* Any ConfigItemList specific styles can be added here */
+/* Most styling is already defined in App.css and ConfigItem.css */
