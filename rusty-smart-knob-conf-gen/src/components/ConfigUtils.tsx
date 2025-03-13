@@ -326,11 +326,7 @@ export const formatConfigItems = (configItems: ConfigItem[]) => {
         DETENT_STRENGTH[item.detentOption as keyof typeof DETENT_STRENGTH] ||
         0,
       endstop_strength: 1,
-      text: `${item.name}\n${
-        item.detentOption === "Custom"
-          ? `Custom (${item.customDetentStrength})`
-          : item.detentOption
-      }`,
+      text: item.name, // Modified to only include the name
       led_hue: hexToHue(item.color),
       entity_id: item.entityId,
     };
