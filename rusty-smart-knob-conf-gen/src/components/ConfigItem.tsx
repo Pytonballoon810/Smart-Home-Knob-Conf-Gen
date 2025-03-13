@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import './ConfigItem.css';
 
 // Define the detent options with Custom option
@@ -39,11 +39,11 @@ export interface ConfigItemProps {
 }
 
 const ConfigItem: React.FC<ConfigItemProps> = ({ item, onUpdate, onDelete, isFieldValid, dragHandleProps }) => {
-  // Get the numerical value for the selected detent option
-  const getDetentStrengthValue = (option: string): string => {
-    if (!option || option === "Custom") return "";
-    return DETENT_STRENGTH[option as keyof typeof DETENT_STRENGTH].toString();
-  };
+  // Memoize the detent strength value to avoid recalculating on each render
+  const detentStrengthValue = useMemo(() => {
+    if (!item.detentOption || item.detentOption === "Custom") return "";
+    return DETENT_STRENGTH[item.detentOption as keyof typeof DETENT_STRENGTH].toString();
+  }, [item.detentOption]);
 
   // Function to handle changes to a detent position entry
   const handleDetentPositionChange = (index: number, field: 'position' | 'strength', value: string) => {
@@ -90,8 +90,8 @@ const ConfigItem: React.FC<ConfigItemProps> = ({ item, onUpdate, onDelete, isFie
     onUpdate(item.id, "detentPositions", newDetentPositions);
   };
 
-  // Check if detent position is valid
-  const isDetentPositionValid = (position: string) => {
+  // Check if detent position is valid - memoize this function
+  const isDetentPositionValid = useMemo(() => (position: string) => {
     if (position === "") return false;
     
     const positionValue = parseInt(position);
@@ -104,9 +104,9 @@ const ConfigItem: React.FC<ConfigItemProps> = ({ item, onUpdate, onDelete, isFie
     }
     
     return true;
-  };
+  }, [item.min, item.max]);
   
-  // Check if detent strength is valid
+  // Check if detent strength is valid - static function, doesn't depend on item properties
   const isDetentStrengthValid = (strength: string) => {
     if (strength === "") return false;
     
@@ -114,18 +114,42 @@ const ConfigItem: React.FC<ConfigItemProps> = ({ item, onUpdate, onDelete, isFie
     return !isNaN(strengthValue) && strengthValue >= 0 && strengthValue <= 9.9;
   };
 
-  // Check if the Custom Detent Positions table has any invalid entries
-  const hasInvalidDetentPositions = () => {
+  // Memoize the check for invalid detent positions to avoid rechecking on every render
+  const hasInvalidDetentPositions = useMemo(() => {
     if (!item.detentPositions || item.detentPositions.length === 0) return false;
     
     return item.detentPositions.some(pos => 
       !isDetentPositionValid(pos.position) || !isDetentStrengthValid(pos.strength)
     );
-  };
+  }, [item.detentPositions, isDetentPositionValid]);
 
-  // Conditional class for the Custom Detent Positions section
-  const detentSectionClass = 
-    `additional-params custom-detent-section ${hasInvalidDetentPositions() ? 'has-invalid-entries' : ''}`;
+  // Memoize class names to avoid string concatenation on every render
+  const classNames = useMemo(() => {
+    return {
+      nameInput: `name-input ${!isFieldValid(item, "name") ? 'invalid' : ''}`,
+      entityIdInput: `entity-id-input ${!isFieldValid(item, "entityId") ? 'invalid' : ''}`,
+      selectDropdown: `select-dropdown ${!item.detentOption ? 'placeholder' : ''} ${!isFieldValid(item, "detentOption") ? 'invalid' : ''}`,
+      customDetentInput: `param-input ${!isFieldValid(item, "customDetentStrength") ? 'invalid' : ''}`,
+      minInput: `param-input ${!isFieldValid(item, "min") ? 'invalid' : ''}`,
+      maxInput: `param-input ${!isFieldValid(item, "max") ? 'invalid' : ''}`,
+      rotationInput: `param-input ${!isFieldValid(item, "rotation") ? 'invalid' : ''}`,
+      detentSection: `additional-params custom-detent-section ${hasInvalidDetentPositions ? 'has-invalid-entries' : ''}`
+    };
+  }, [
+    item.name, item.entityId, item.detentOption, item.customDetentStrength, 
+    item.min, item.max, item.rotation, hasInvalidDetentPositions, isFieldValid
+  ]);
+
+  // Memoize feature flags to avoid recomputing conditionals
+  const features = useMemo(() => {
+    return {
+      isCustomDetent: item.detentOption === "Custom",
+      isStrongDetents: item.detentOption === "Strong Detents",
+      isPredefinedDetent: item.detentOption !== "" && item.detentOption !== "Custom",
+      isDefaultMinMax: item.min === "0" && item.max === "-1",
+      hasEndStops: item.max !== "-1"
+    };
+  }, [item.detentOption, item.min, item.max]);
 
   return (
     <div className="config-item-wrapper">
@@ -140,7 +164,7 @@ const ConfigItem: React.FC<ConfigItemProps> = ({ item, onUpdate, onDelete, isFie
           placeholder="Item Name (max 16 chars)"
           value={item.name}
           onChange={(e) => onUpdate(item.id, "name", e.target.value)}
-          className={`name-input ${!isFieldValid(item, "name") ? 'invalid' : ''}`}
+          className={classNames.nameInput}
           maxLength={16}
         />
         
@@ -149,13 +173,13 @@ const ConfigItem: React.FC<ConfigItemProps> = ({ item, onUpdate, onDelete, isFie
           placeholder="Entity ID"
           value={item.entityId}
           onChange={(e) => onUpdate(item.id, "entityId", e.target.value)}
-          className={`entity-id-input ${!isFieldValid(item, "entityId") ? 'invalid' : ''}`}
+          className={classNames.entityIdInput}
         />
         
         <select
           value={item.detentOption}
           onChange={(e) => onUpdate(item.id, "detentOption", e.target.value)}
-          className={`select-dropdown ${!item.detentOption ? 'placeholder' : ''} ${!isFieldValid(item, "detentOption") ? 'invalid' : ''}`}
+          className={classNames.selectDropdown}
         >
           <option value="" disabled>Detent Option</option>
           {detentOptions.map((option) => (
@@ -167,7 +191,7 @@ const ConfigItem: React.FC<ConfigItemProps> = ({ item, onUpdate, onDelete, isFie
         
         <button 
           onClick={() => onDelete(item.id)}
-          className="delete-button"
+          className="button delete"
           aria-label="Delete item"
         >
           Delete
@@ -175,7 +199,7 @@ const ConfigItem: React.FC<ConfigItemProps> = ({ item, onUpdate, onDelete, isFie
       </div>
       
       {/* Display input for custom detent strength when Custom is selected */}
-      {item.detentOption === "Custom" && (
+      {features.isCustomDetent && (
         <div className="additional-params">
           <div className="param-container">
             <label>Detent Strength:</label>
@@ -184,7 +208,7 @@ const ConfigItem: React.FC<ConfigItemProps> = ({ item, onUpdate, onDelete, isFie
               value={item.customDetentStrength}
               onChange={(e) => onUpdate(item.id, "customDetentStrength", e.target.value)}
               placeholder="0.0-9.9"
-              className={`param-input ${!isFieldValid(item, "customDetentStrength") ? 'invalid' : ''}`}
+              className={classNames.customDetentInput}
               step="0.1"
               min="0"
               max="9.9"
@@ -198,19 +222,19 @@ const ConfigItem: React.FC<ConfigItemProps> = ({ item, onUpdate, onDelete, isFie
       )}
       
       {/* Display the numerical strength value for predefined detent options */}
-      {item.detentOption && item.detentOption !== "Custom" && (
+      {features.isPredefinedDetent && (
         <div className="additional-params">
           <div className="param-info">
             <span className="detent-value-info">
-              Detent Strength Value: <strong>{getDetentStrengthValue(item.detentOption)}</strong>
+              Detent Strength Value: <strong>{detentStrengthValue}</strong>
             </span>
           </div>
         </div>
       )}
       
       {/* Display warning for Strong Detents */}
-      {item.detentOption === "Strong Detents" && (
-        <div className="detent-warning">
+      {features.isStrongDetents && (
+        <div className="warning orange">
           ⚠️ Strong detents are not recommended. Consider using "Weak Detents" for better experience.
         </div>
       )}
@@ -236,7 +260,7 @@ const ConfigItem: React.FC<ConfigItemProps> = ({ item, onUpdate, onDelete, isFie
             value={item.min}
             onChange={(e) => onUpdate(item.id, "min", e.target.value)}
             placeholder="Min"
-            className={`param-input ${!isFieldValid(item, "min") ? 'invalid' : ''}`}
+            className={classNames.minInput}
             required
           />
         </div>
@@ -247,7 +271,7 @@ const ConfigItem: React.FC<ConfigItemProps> = ({ item, onUpdate, onDelete, isFie
             value={item.max}
             onChange={(e) => onUpdate(item.id, "max", e.target.value)}
             placeholder="Max"
-            className={`param-input ${!isFieldValid(item, "max") ? 'invalid' : ''}`}
+            className={classNames.maxInput}
             required
           />
         </div>
@@ -262,7 +286,7 @@ const ConfigItem: React.FC<ConfigItemProps> = ({ item, onUpdate, onDelete, isFie
             value={item.rotation}
             onChange={(e) => onUpdate(item.id, "rotation", e.target.value)}
             placeholder="Optional"
-            className={`param-input ${!isFieldValid(item, "rotation") ? 'invalid' : ''}`}
+            className={classNames.rotationInput}
           />
         </div>
         <div className="param-hint">
@@ -271,107 +295,110 @@ const ConfigItem: React.FC<ConfigItemProps> = ({ item, onUpdate, onDelete, isFie
       </div>
       
       {/* Warning for default min/max values */}
-      {item.min === "0" && item.max === "-1" && (
-        <div className="param-warning">
+      {features.isDefaultMinMax && (
+        <div className="warning blue">
           ℹ️ Using default values (Min: 0, Max: -1) means there will be no end stops. Rotation will be unlimited.
         </div>
       )}
       
       {/* Custom Detent Positions Table */}
-      <div className={detentSectionClass}>
-        <div className="custom-detent-header">
-          <h3>Custom Detent Positions</h3>
-          <div className="emphasize-option">
-            <input
-              type="checkbox"
-              id={`emphasize-extreme-values-${item.id}`}
-              checked={item.emphasizeExtremeValues}
-              onChange={(e) => onUpdate(item.id, "emphasizeExtremeValues", e.target.checked)}
-              className="emphasize-checkbox"
-            />
-            <label htmlFor={`emphasize-extreme-values-${item.id}`} className="emphasize-label">
-              Emphasize extreme values
-            </label>
+      {features.isCustomDetent && (
+        <div className={classNames.detentSection}>
+          <div className="custom-detent-header">
+            <h3>Custom Detent Positions</h3>
+            <div className="emphasize-option">
+              <input
+                type="checkbox"
+                id={`emphasize-extreme-values-${item.id}`}
+                checked={item.emphasizeExtremeValues}
+                onChange={(e) => onUpdate(item.id, "emphasizeExtremeValues", e.target.checked)}
+                className="emphasize-checkbox"
+              />
+              <label htmlFor={`emphasize-extreme-values-${item.id}`} className="emphasize-label">
+                Emphasize extreme values
+              </label>
+            </div>
           </div>
-        </div>
-        
-        {item.emphasizeExtremeValues && (
-          <div className="emphasize-info">
-            This will double the detent strength at min and max positions
-          </div>
-        )}
-        
-        {hasInvalidDetentPositions() && (
-          <div className="validation-error">
-            ⚠️ Some detent positions have invalid values. Please correct them before continuing.
-          </div>
-        )}
-        
-        <table className="detent-positions-table">
-          <thead>
-            <tr>
-              <th>Position</th>
-              <th>Detent Strength (0.0-9.9)</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {item.detentPositions.map((entry, index) => (
-              <tr key={index}>
-                <td>
-                  <input
-                    type="number"
-                    value={entry.position}
-                    onChange={(e) => updateDetentPosition(index, 'position', e.target.value)}
-                    className={`detent-position-input ${!isDetentPositionValid(entry.position) ? 'invalid' : ''}`}
-                    placeholder="Position"
-                    required
-                  />
-                </td>
-                <td>
-                  <input
-                    type="number"
-                    value={entry.strength}
-                    onChange={(e) => handleDetentPositionChange(index, 'strength', e.target.value)}
-                    className={`detent-strength-input ${!isDetentStrengthValid(entry.strength) ? 'invalid' : ''}`}
-                    placeholder="Strength"
-                    step="0.1"
-                    min="0"
-                    max="9.9"
-                    required
-                  />
-                </td>
-                <td>
-                  <button
-                    onClick={() => removeDetentPosition(index)}
-                    className="remove-position-button"
-                    aria-label="Remove position"
-                  >
-                    ✕
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <button 
-          onClick={addDetentPosition}
-          className="add-position-button"
-          aria-label="Add detent position"
-        >
-          Add Position
-        </button>
-        <div className="detent-positions-info">
-          Define custom positions where detents should occur and their individual strength values.
-          {item.max !== "-1" && (
-            <div>
-              <strong>Note:</strong> Positions must be between {item.min} and {item.max} when end stops are enabled.
+          
+          {item.emphasizeExtremeValues && (
+            <div className="emphasize-info">
+              This will double the detent strength at min and max positions
             </div>
           )}
+          
+          {hasInvalidDetentPositions && (
+            <div className="validation-error">
+              ⚠️ Some detent positions have invalid values. Please correct them before continuing.
+            </div>
+          )}
+          
+          <table className="detent-positions-table">
+            <thead>
+              <tr>
+                <th>Position</th>
+                <th>Detent Strength (0.0-9.9)</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {item.detentPositions.map((entry, index) => (
+                <tr key={index}>
+                  <td>
+                    <input
+                      type="number"
+                      value={entry.position}
+                      onChange={(e) => updateDetentPosition(index, 'position', e.target.value)}
+                      className={`detent-position-input ${!isDetentPositionValid(entry.position) ? 'invalid' : ''}`}
+                      placeholder="Position"
+                      required
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      value={entry.strength}
+                      onChange={(e) => handleDetentPositionChange(index, 'strength', e.target.value)}
+                      className={`detent-strength-input ${!isDetentStrengthValid(entry.strength) ? 'invalid' : ''}`}
+                      placeholder="Strength"
+                      step="0.1"
+                      min="0"
+                      max="9.9"
+                      required
+                    />
+                  </td>
+                  <td>
+                    <button
+                      onClick={() => removeDetentPosition(index)}
+                      className="remove-position-button"
+                      aria-label="Remove position"
+                    >
+                      ✕
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <button 
+            onClick={addDetentPosition}
+            className="add-position-button"
+            aria-label="Add detent position"
+          >
+            Add Position
+          </button>
+          <div className="detent-positions-info">
+            Define custom positions where detents should occur and their individual strength values.
+            {features.hasEndStops && (
+              <div>
+                <strong>Note:</strong> Positions must be between {item.min} and {item.max} when end stops are enabled.
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
 
-export default ConfigItem;
+// Use React.memo to prevent unnecessary re-renders
+export default React.memo(ConfigItem);

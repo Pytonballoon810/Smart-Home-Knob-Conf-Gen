@@ -78,6 +78,7 @@
   background-color: #cccccc;
 }
 
+/* No extra styles needed as we're using the common button classes from App.css */
 .button-group {
   display: flex;
   justify-content: center;
@@ -85,15 +86,8 @@
   margin: 1.5rem auto;
 }
 
-.button-group .generate-button,
-.button-group .copy-button {
+.button-group button {
   margin: 0;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .button-group {
-    flex-direction: column;
-    gap: 10px;
-  }
-}
+/* Responsive adjustments are handled in App.css */

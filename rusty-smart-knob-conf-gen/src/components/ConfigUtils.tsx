@@ -157,8 +157,9 @@ export const checkAllItemsValid = (configItems: ConfigItem[]): boolean => {
         return false;
       }
 
-      // Check if any custom detent positions are invalid
-      if (hasInvalidDetentPositions(item)) {
+      // Check if any custom detent positions are invalid when using custom detent option
+      // Make sure this validation also runs when there are detent positions defined
+      if (item.detentPositions.length > 0 && hasInvalidDetentPositions(item)) {
         return false;
       }
     }

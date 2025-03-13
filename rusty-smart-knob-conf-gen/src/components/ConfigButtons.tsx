@@ -1,6 +1,6 @@
 import React from 'react';
 import './ConfigButtons.css';
-import { ConfigItem, formatConfigItems } from './ConfigUtils';
+import { ConfigItem, formatConfigItems, checkAllItemsValid } from './ConfigUtils';
 
 interface ConfigButtonsProps {
   configItems: ConfigItem[];
@@ -17,6 +17,12 @@ const ConfigButtons: React.FC<ConfigButtonsProps> = ({
 }) => {
 
   const generateConfig = () => {
+    // Double-check validity before generating config
+    if (!checkAllItemsValid(configItems)) {
+      onNotification("Cannot generate config: Some items have invalid values");
+      return;
+    }
+
     const formattedConfig = formatConfigItems(configItems);
     const configText = JSON.stringify(formattedConfig, null, 2);
     const blob = new Blob([configText], { type: "application/json" });
@@ -29,6 +35,12 @@ const ConfigButtons: React.FC<ConfigButtonsProps> = ({
   };
 
   const copyConfigToClipboard = () => {
+    // Double-check validity before copying config
+    if (!checkAllItemsValid(configItems)) {
+      onNotification("Cannot copy config: Some items have invalid values");
+      return;
+    }
+
     const formattedConfig = formatConfigItems(configItems);
     // Use compact JSON without indentation for clipboard copy
     const compactConfigText = JSON.stringify(formattedConfig);
@@ -43,11 +55,16 @@ const ConfigButtons: React.FC<ConfigButtonsProps> = ({
       });
   };
 
+  // Compute button classes only once
+  const buttonClass = `button add ${!isValid ? "disabled" : ""}`;
+  const generateButtonClass = `button generate ${!isValid ? "disabled" : ""}`;
+  const copyButtonClass = `button copy ${!isValid ? "disabled" : ""}`;
+
   return (
     <>
       <button
         onClick={onAddItem}
-        className={`add-button ${!isValid ? "disabled" : ""}`}
+        className={buttonClass}
         disabled={!isValid}
       >
         Add New Item
@@ -56,7 +73,7 @@ const ConfigButtons: React.FC<ConfigButtonsProps> = ({
       <div className="button-group">
         <button
           onClick={generateConfig}
-          className={`generate-button ${!isValid ? "disabled" : ""}`}
+          className={generateButtonClass}
           disabled={!isValid}
         >
           Generate Config
@@ -64,7 +81,7 @@ const ConfigButtons: React.FC<ConfigButtonsProps> = ({
 
         <button
           onClick={copyConfigToClipboard}
-          className={`copy-button ${!isValid ? "disabled" : ""}`}
+          className={copyButtonClass}
           disabled={!isValid}
         >
           Copy Config

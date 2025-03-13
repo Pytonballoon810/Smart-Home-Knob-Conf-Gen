@@ -9,10 +9,6 @@
 
 .name-input {
   flex: 1;
-  padding: 0.75rem;
-  font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
   min-width: 120px; /* Minimum width for input */
 }
 
@@ -22,30 +18,7 @@
 
 .select-dropdown {
   flex: 1.5;
-  padding: 0.75rem;
-  font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
   min-width: 150px; /* Minimum width for dropdown */
-  -webkit-appearance: none; /* Remove default macOS styling */
-  -moz-appearance: none;
-  appearance: none;
-  background-image: url("data:image/svg+xml;utf8,<svg fill='black' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
-  background-repeat: no-repeat;
-  background-position: right 8px center;
-  background-size: 16px;
-  padding-right: 30px; /* Make room for the custom arrow */
-}
-
-.select-dropdown::-ms-expand {
-  display: none; /* Remove default arrow in IE */
-}
-
-/* Add focus styling */
-.select-dropdown:focus {
-  outline: none;
-  border-color: #2196F3;
-  box-shadow: 0 0 4px rgba(33, 150, 243, 0.5);
 }
 
 /* Only apply placeholder styling to the displayed value, not the dropdown options */
@@ -67,29 +40,11 @@
 
 .entity-id-input {
   flex: 1;
-  padding: 0.75rem;
-  font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
   min-width: 120px; /* Minimum width for input */
 }
 
 .entity-id-input::placeholder {
   font-size: 0.9rem;
-}
-
-.delete-button {
-  padding: 0.75rem 1rem;
-  background-color: #f44336;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9rem;
-}
-
-.delete-button:hover {
-  background-color: #d32f2f;
 }
 
 .config-item-wrapper {
@@ -122,41 +77,9 @@
 }
 
 .param-input {
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
   width: 100px;
   min-width: 60px;
-}
-
-.name-input.invalid,
-.entity-id-input.invalid,
-.select-dropdown.invalid,
-.param-input.invalid,
-.detent-position-input.invalid,
-.detent-strength-input.invalid {
-  border: 2px solid #ff8c00; /* Orange border */
-  box-shadow: 0 0 5px rgba(255, 140, 0, 0.5); /* Subtle orange glow */
-}
-
-.name-input.invalid::placeholder,
-.entity-id-input.invalid::placeholder {
-  color: #ff8c00;
-}
-
-/* Add a subtle animation to draw attention */
-@keyframes pulse-border {
-  0% { border-color: #ff8c00; }
-  50% { border-color: #ff6b00; }
-  100% { border-color: #ff8c00; }
-}
-
-.name-input.invalid:focus,
-.entity-id-input.invalid:focus,
-.select-dropdown.invalid:focus,
-.param-input.invalid:focus {
-  animation: pulse-border 1.5s infinite;
-  outline: none;
+  padding: 8px;
 }
 
 .color-picker {
@@ -186,26 +109,10 @@
   word-wrap: break-word; /* Allow text to wrap */
 }
 
-/* Warning messages should be fully visible */
-.detent-warning, .param-warning {
-  overflow-wrap: break-word;
-}
-
 /* Advanced settings styling */
 .advanced-params {
   border-left: 2px dashed #9e9e9e;
   background-color: #f8f8f8;
-}
-
-.advanced-warning {
-  margin: 5px 0 5px 20px;
-  padding: 8px 12px;
-  background-color: #fff0f0;
-  color: #a94442;
-  border-left: 4px solid #f5c6cb;
-  border-radius: 0 4px 4px 0;
-  font-size: 0.9rem;
-  animation: fadeIn 0.3s ease;
 }
 
 .param-hint {
@@ -236,17 +143,17 @@
   margin-top: 20px;
   background-color: #f9f9f9;
   border-radius: 4px;
-  padding: 15px 10px; /* Reduce horizontal padding */
+  padding: 15px 10px;
   border: 1px solid #e0e0e0;
-  width: calc(100% - 22px); /* Adjusted width calculation to fit properly */
-  overflow-x: hidden; /* Prevent horizontal scrolling within this section */
-  box-sizing: border-box; /* Include padding in width calculation */
-  max-width: 100%; /* Ensure it never exceeds container width */
+  width: calc(100% - 22px);
+  overflow-x: hidden;
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 .custom-detent-header {
   display: flex;
-  flex-direction: column; /* Stack items vertically by default */
+  flex-direction: column;
   align-items: flex-start;
   margin-bottom: 15px;
   width: 100%;
@@ -262,7 +169,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap; /* Allow wrapping if needed */
+  flex-wrap: wrap;
   margin-bottom: 5px;
 }
 
@@ -270,7 +177,7 @@
   width: 16px;
   height: 16px;
   cursor: pointer;
-  flex-shrink: 0; /* Prevent checkbox from shrinking */
+  flex-shrink: 0;
 }
 
 .emphasize-label {
@@ -290,51 +197,42 @@
 }
 
 .detent-positions-table {
-  width: 100%; /* Make table take full width of container */
-  max-width: 100%; /* Ensure table doesn't exceed container width */
-  margin: 10px 0; /* Change from auto to 0 for left margin */
-  table-layout: fixed; /* Fixed table layout for better control */
+  width: 100%;
+  max-width: 100%;
+  margin: 10px 0;
+  table-layout: fixed;
 }
 
 .detent-positions-table th {
   text-align: left;
-  padding: 8px 4px; /* Reduce horizontal padding in table cells */
+  padding: 8px 4px;
   font-size: 0.9rem;
   font-weight: normal;
   color: #666;
   border-bottom: 1px solid #ddd;
-  word-wrap: break-word; /* Allow text wrapping in cells */
+  word-wrap: break-word;
 }
 
 .detent-positions-table td {
-  padding: 8px 4px; /* Reduce horizontal padding in table cells */
+  padding: 8px 4px;
   border-bottom: 1px solid #eee;
-  word-wrap: break-word; /* Allow text wrapping in cells */
+  word-wrap: break-word;
 }
 
 .detent-positions-table th:first-child,
 .detent-positions-table td:first-child {
-  width: 25%; /* Position column width */
+  width: 25%;
 }
 
 .detent-positions-table th:nth-child(2),
 .detent-positions-table td:nth-child(2) {
-  width: 55%; /* Strength column width */
+  width: 55%;
 }
 
 .detent-positions-table th:last-child,
 .detent-positions-table td:last-child {
-  width: 20%; /* Actions column width */
-  text-align: center; /* Center the content */
-}
-
-.detent-position-input,
-.detent-strength-input {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 0.9rem;
+  width: 20%;
+  text-align: center;
 }
 
 .remove-position-button {
@@ -349,7 +247,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto; /* Center the button in its container */
+  margin: 0 auto;
 }
 
 .remove-position-button:hover {
@@ -378,35 +276,47 @@
   font-style: italic;
 }
 
-/* Custom detent positions table styling */
-.detent-positions-table {
-  width: 100%; /* Make table take full width of container */
-  max-width: 500px;
-  margin: 10px 0; /* Change from auto to 0 for left margin */
+.has-invalid-entries {
+  border: 1px dashed #ff8c00 !important;
+  background-color: #fff8f0 !important;
 }
 
-.detent-position-row {
+.validation-error {
+  color: #ff8c00;
+  font-size: 0.9rem;
+  margin: 5px 0 10px;
+  padding: 5px 10px;
+  background-color: #fff4e6;
+  border-left: 3px solid #ff8c00;
+  border-radius: 0 4px 4px 0;
+}
+
+.rotation-params .param-hint {
+  font-size: 0.8rem;
+  color: #666;
+  margin-left: 10px;
+  font-style: italic;
+  max-width: 300px;
+  line-height: 1.4;
+}
+
+.drag-handle {
+  cursor: grab;
+  color: #888;
+  font-size: 18px;
   display: flex;
-  gap: 8px;
-  margin-bottom: 8px;
   align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  user-select: none;
+  height: 100%;
 }
 
-.detent-position-input {
-  width: 60px !important; /* Make the position input smaller and enforce size */
-  flex: 0 0 60px;
+.drag-handle:active {
+  cursor: grabbing;
 }
 
-.detent-strength-input {
-  flex: 1;
-}
-
-.detent-position-controls {
-  display: flex;
-  gap: 5px;
-}
-
-/* Add responsive styles */
+/* Responsive styles */
 @media (max-width: 768px) {
   .additional-params {
     margin-left: 10px;
@@ -422,7 +332,6 @@
     padding-left: 5px;
   }
   
-  /* Responsive styles for the detent positions table */
   .custom-detent-header {
     flex-direction: column;
     align-items: flex-start;
@@ -440,7 +349,7 @@
   }
   
   .custom-detent-section {
-    width: calc(100% - 12px); /* Further reduce width on mobile */
+    width: calc(100% - 12px);
     padding: 10px 5px;
     margin-left: 5px;
     margin-right: 5px;
@@ -448,44 +357,13 @@
   
   .detent-positions-table th,
   .detent-positions-table td {
-    padding: 6px 2px; /* Smaller padding on mobile */
-    font-size: 0.85rem; /* Smaller font size on mobile */
-  }
-  
-  .detent-position-input,
-  .detent-strength-input {
-    padding: 4px; /* Smaller input padding on mobile */
-    font-size: 0.85rem; /* Smaller font size for inputs */
+    padding: 6px 2px;
+    font-size: 0.85rem;
   }
   
   .remove-position-button {
-    width: 24px; /* Smaller button on mobile */
+    width: 24px;
     height: 24px;
     font-size: 0.8rem;
   }
-}
-
-.has-invalid-entries {
-  border: 1px dashed #ff8c00 !important;
-  background-color: #fff8f0 !important;
-}
-
-.validation-error {
-  color: #ff8c00;
-  font-size: 0.9rem;
-  margin: 5px 0 10px;
-  padding: 5px 10px;
-  background-color: #fff4e6;
-  border-left: 3px solid #ff8c00;
-  border-radius: 0 4px 4px 0;
-}
-
-/* Styling for rotation input */
-.rotation-params .param-hint {
-  font-size: 0.8rem;
-  color: #666;
-  margin-left: 10px;
-  font-style: italic;
-  max-width: 300px;
-  line-height: 1.4;
 }
