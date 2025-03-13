@@ -291,6 +291,10 @@
   border-radius: 0 4px 4px 0;
 }
 
+.rotation-params {
+  border-left: 2px dashed #e0e0e0; /* Changed from solid to dashed */
+}
+
 .rotation-params .param-hint {
   font-size: 0.8rem;
   color: #666;
