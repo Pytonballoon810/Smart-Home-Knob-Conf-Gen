@@ -29,7 +29,6 @@ function App() {
       customDetentStrength: DEFAULT_CUSTOM_DETENT_STRENGTH,
       detentPositions: [] as DetentPosition[],
       emphasizeExtremeValues: false,
-      step: "",
       rotation: "", // Added rotation field with empty default
     },
   ]);
@@ -72,7 +71,6 @@ function App() {
         customDetentStrength: DEFAULT_CUSTOM_DETENT_STRENGTH,
         detentPositions: [] as DetentPosition[],
         emphasizeExtremeValues: false,
-        step: "",
         rotation: "", // Added rotation field with empty default
       },
     ]);

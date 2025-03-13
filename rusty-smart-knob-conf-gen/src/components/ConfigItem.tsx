@@ -30,7 +30,6 @@ export interface ConfigItemProps {
     customDetentStrength: string;
     detentPositions: DetentPosition[];
     emphasizeExtremeValues: boolean;
-    step: string; // Add the missing step property
     rotation: string; // Added rotation field
   };
   onUpdate: (id: number, field: string, value: any) => void;
@@ -250,16 +249,6 @@ const ConfigItem: React.FC<ConfigItemProps> = ({ item, onUpdate, onDelete, isFie
             placeholder="Max"
             className={`param-input ${!isFieldValid(item, "max") ? 'invalid' : ''}`}
             required
-          />
-        </div>
-        <div className="param-container">
-          <label>Step:</label>
-          <input
-            type="number"
-            value={item.step}
-            onChange={(e) => onUpdate(item.id, "step", e.target.value)}
-            placeholder="Step"
-            className={`param-input ${!isFieldValid(item, "step") ? 'invalid' : ''}`}
           />
         </div>
       </div>
